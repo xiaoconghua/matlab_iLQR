@@ -1,0 +1,43 @@
+function [ output_args ] = kinodynamics(x, u, refTraj)
+%KINODYNAMICS Specify a 4 states kinodynamics of a car.
+% Inputs
+% ======
+% x = [arc_len, lat_offset, theta_err, vel] 
+% u = [delta, accel]
+% refTraj gives the reference trajectory of the problem. The reference
+% trajectory has to be represented in path frame.
+
+interp_waypoint = GetInterpWaypoint(x(1), refTraj);
+curv_path = interp_waypoint.curvature;
+heading_path = interp_waypoint.heading;
+
+
+end
+
+function interp_waypoint = GetInterpWaypoint(arclen, refTraj)
+    [closest_arc, closest_indx] = closest_value(refArcLength, arclen);
+    
+    if(arclen >= closest_arc)
+        lower_index = closest_indx;
+        upper_index = closest_indx + 1;
+    else
+        lower_index = closest_indx - 1;
+        upper_index = closest_indx;
+    end
+    
+    interp_waypoint = waypoint();
+    
+    interp_ratio = (arclen - refArcLength(lower_index))/(refArcLength(upper_index) - refArcLength(lower_index));
+    interp_curv  = interpValue(interp_ratio, refTraj.curvature(lower_index), refTraj.curvature(upper_index));
+    interp_vel  = interpValue(interp_ratio, refTraj.velocity(lower_index), refTraj.velocity(upper_index));
+    interp_arclen  = interpValue(interp_ratio, refTraj.arclength(lower_index), refTraj.arclength(upper_index));
+    
+    interp_waypoint.curvature = interp_curv;
+    interp_waypoint.velocity = interp_vel;
+    interp_waypoint.arclength = interp_arclen;
+    interp_waypoint.position = interp_p
+end
+
+function ret_value = interpValue(ratio, lower, upper)
+    ret_value = lower + ratio.*upper;
+end
