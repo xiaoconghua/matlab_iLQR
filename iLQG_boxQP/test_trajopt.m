@@ -17,12 +17,13 @@ obs = [6 10; 0.1 0.4];  % in path frame
 % TODO change this according to x0 and x_des?
 u0      = zeros(2,T); % Just setting up shape here
 u0(1,:) = 0*randn(1,T); % commanded steering
-u0(2,:) = 0.1*randn(1,T);  % commanded acceleration
+u0(2,:) = 0*randn(1,T);  % commanded acceleration
 
 % controller limit
 Op.lims  = [-1  1;   
             -2 2];
-Op.maxIter = 30;
+Op.maxIter  = 30;
+Op.print    = 1;  % 0: no;  1: final; 2: iter; 3: iter, detailed
  
 
 % Generate a reference trajectory
