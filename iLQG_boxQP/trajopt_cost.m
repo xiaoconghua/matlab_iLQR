@@ -4,6 +4,8 @@ function [c] = trajopt_cost(x, u, refTraj)
 % lu: quadratic cost on controls
 % lf: final cost on state from target state
 % lx: running cost on lateral
+% lobs: static related cost
+% lb: boundary related cost
 
 % Get the final state from the reference trajectory. Importantly, we want
 % the lateral offset and heading error to be 0.
@@ -38,8 +40,8 @@ lx = cx*sabs(dist,px);
 
 global obs
 % Dynamic obstacle cost
-k_pos = 0.5;
-d_thres = 0.2;
+k_pos = 1e-3;
+d_thres = 0.1;
 arc_thres = 0.2;
 
 lobs = 0;
@@ -51,7 +53,8 @@ if ~isempty(obs)
         vec2obs = bsxfun(@minus,obs_mat,x(1:2,:));
         dist2obs = sqrt(sum(vec2obs.^2,1));
 
-        Ustatic = (1./dist2obs - 1/d_thres).^2;    
+%         Ustatic = (1./dist2obs - 1/d_thres).^2;  
+        Ustatic = 1./(dist2obs - d_thres).^2;   
         toofar = abs(arc2obs) >= arc_thres;
         Ustatic(toofar) = 0;
 
@@ -59,8 +62,15 @@ if ~isempty(obs)
     end
 end
 
+% stay with the boundary cost
+% For initial pass, we assume constant lateral bounds
+bound_right = -1;
+bound_left  = 1;
+k_bound = 1e-1;
+lb    = k_bound .* (x(2, :) - bound_right).*(x(2,:) - bound_left);
+
 % total cost
-c     = lu + lf + lx + lobs;
+c     = lu + lf + lx + lobs + lb;
 end
 
 % smooth absolute-value function (a.k.a pseudo-Huber)
