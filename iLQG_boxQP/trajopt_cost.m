@@ -44,17 +44,19 @@ arc_thres = 0.2;
 
 lobs = 0;
 if ~isempty(obs)
-    % pos = x(1:2,:); vel = x(4:5,:);
-    obs_mat = repmat(obs,1,size(x,2));
-    arc2obs = bsxfun(@minus,obs_mat(1, :), x(1, :));
-    vec2obs = bsxfun(@minus,obs_mat,x(1:2,:));
-    dist2obs = sqrt(sum(vec2obs.^2,1));
-    
-    Ustatic = (1./dist2obs - 1/d_thres).^2;    
-    toofar = abs(arc2obs) >= arc_thres;
-    Ustatic(toofar) = 0;
-        
-    lobs = k_pos*Ustatic;
+    for i = 1:size(obs, 2)
+        obs_i = obs(:, i);
+        obs_mat = repmat(obs_i,1,size(x,2));
+        arc2obs = bsxfun(@minus,obs_mat(1, :), x(1, :));
+        vec2obs = bsxfun(@minus,obs_mat,x(1:2,:));
+        dist2obs = sqrt(sum(vec2obs.^2,1));
+
+        Ustatic = (1./dist2obs - 1/d_thres).^2;    
+        toofar = abs(arc2obs) >= arc_thres;
+        Ustatic(toofar) = 0;
+
+        lobs = lobs + k_pos*Ustatic;
+    end
 end
 
 % total cost

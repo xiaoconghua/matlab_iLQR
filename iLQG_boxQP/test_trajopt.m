@@ -12,7 +12,7 @@ global x0;  %[arclen, lateral, heading_error, vel]
 x0      = [0; 0; 0; 6];   % initial state
 
 global obs;
-obs = [6; 0.1];  % in path frame 
+obs = [6 10; 0.1 0.4];  % in path frame 
 
 % TODO change this according to x0 and x_des?
 u0      = zeros(2,T); % Just setting up shape here
