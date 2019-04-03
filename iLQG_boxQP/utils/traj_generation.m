@@ -5,15 +5,15 @@ addpath('utils');
 
 kCircleRadius = 10;
 kFinalAngle = pi/2;
-kRefSize    = 10;
-kTimestep   = 0.1;
+kRefSize    = 50;
+kTimestep   = 0.05;
 
 kIncrementalAngle = kFinalAngle / (kRefSize - 1);
 
 refTrajMsg  = cell(kRefSize, 1);
 refCurvMat  = zeros(kRefSize, 1);
 refVelMat   = zeros(kRefSize, 1);
-refArcLenMat    = zeros(kRefSize, 1);
+refArcLenMat= zeros(kRefSize, 1);
 refPosMat   = zeros(kRefSize, 2);
 refLatBoundsMat = zeros(kRefSize, 2);
 refVelBoundsMat = zeros(kRefSize, 2);
@@ -22,16 +22,18 @@ prev_position = [0, 0];
 for i = 1 : kRefSize
     waypoint_i = waypoint();
     waypoint_i.time_along_traj = i * kTimestep;
-    waypoint_i.curvature = 0;
     rotate_angle = kIncrementalAngle*(i - 1);
     waypoint_i.position = [kCircleRadius*cos(rotate_angle), kCircleRadius*sin(rotate_angle)];
+    waypoint_i.curvature = 1/kCircleRadius;
     if i == 1
         waypoint_i.arclength = 0;
+        dist_diff = 0;
     else
-        waypoint_i.arclength = refTrajMsg{i - 1}.arclength + norm(waypoint_i.position - prev_position);
+        dist_diff = norm(waypoint_i.position - prev_position);
+        waypoint_i.arclength = refTrajMsg{i - 1}.arclength + dist_diff;
     end
     
-    waypoint_i.velocity = waypoint_i.arclength / kTimestep;
+    waypoint_i.velocity = dist_diff / kTimestep;
     
     refTrajMsg(i) = {waypoint_i};
     
@@ -56,8 +58,14 @@ refTraj.velbounds = refVelBoundsMat;
 refTraj.num_nodes = kRefSize;
 %% plot the trajectory
 figure;
+subplot(3, 1, 1)
 plot(refPosMat(:, 1), refPosMat(:, 2))
-hold on
+legend('position')
+subplot(3, 1, 2)
 plot(refArcLenMat)
+legend('arclength')
+subplot(3, 1, 3)
+plot(refVelMat)
+legend('vel')
 end
 
