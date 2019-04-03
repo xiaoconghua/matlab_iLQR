@@ -25,19 +25,40 @@ else
 end
 
 % Control cost
-cu  = 1e-2*[2 1];        % control cost coefficients
+cu  = 1e-1*[2 1];        % control cost coefficients
 lu  = cu*u.^2;
 
 % Running cost. Currently, we only consider running cost on lateral offset
 % and heading error
-cx  = 1e-1*[1 1];   % running cost coefficients 
+cx  = 1e-2*[1 1];   % running cost coefficients 
 px  = [.01 .01]';   % smoothness scales for running cost
 
 dist = bsxfun(@minus,x(2:3,:),x_final(2:3));
 lx = cx*sabs(dist,px);
 
+global obs
+% Dynamic obstacle cost
+k_pos = 0.5;
+d_thres = 0.2;
+arc_thres = 0.2;
+
+lobs = 0;
+if ~isempty(obs)
+    % pos = x(1:2,:); vel = x(4:5,:);
+    obs_mat = repmat(obs,1,size(x,2));
+    arc2obs = bsxfun(@minus,obs_mat(1, :), x(1, :));
+    vec2obs = bsxfun(@minus,obs_mat,x(1:2,:));
+    dist2obs = sqrt(sum(vec2obs.^2,1));
+    
+    Ustatic = (1./dist2obs - 1/d_thres).^2;    
+    toofar = abs(arc2obs) >= arc_thres;
+    Ustatic(toofar) = 0;
+        
+    lobs = k_pos*Ustatic;
+end
+
 % total cost
-c     = lu + lf + lx;
+c     = lu + lf + lx + lobs;
 end
 
 % smooth absolute-value function (a.k.a pseudo-Huber)
